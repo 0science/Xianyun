@@ -1,8 +1,7 @@
 <template>
-    <div>
-        旅游攻略
-        <br>
-    </div>
+  <div class="list">
+    列表组件
+  </div>
 </template>
 
 <script>

@@ -1,8 +1,5 @@
 <template>
-    <div>
-        旅游攻略
-        <br>
-    </div>
+  <div>国内机票</div>
 </template>
 
 <script>
