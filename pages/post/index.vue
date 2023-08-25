@@ -3,53 +3,25 @@
     <el-row type="flex" justify="space-between">
      
       <div class="menus-wrapper">
-        <div class="menus-body"  @mouseleave="leaveHander">
+        <div class="menus-body" @mouseleave="leaveHander">
         <!-- 左侧一级菜单栏 -->
           <div class="menus">
             <div v-for="(item,index) in cities" :key="index" class="menu-item"
-             @mouseenter="enterHander(index)"
-            :class="{active:index==0}">
+            @mouseenter="enterHander(index)"
+            :class="{active:index==currentIndex}">
               <span>{{ item.type }}</span>
             </div>
           </div>
           <!-- 左侧二级菜单 使用mouseenter 和 mouseleave 来控制显隐 -->
           <div class="sub-menus" v-show="isshow">
             <ul>
-              <li>
-                <nuxt-link :to="`/post?city=北京`">
-                  <i>1</i>
-                  <strong>北京</strong>
-                  <span>世界著名古都</span>
+              <li v-for="(item,index) in citiesChildren" :key="index">
+                <nuxt-link :to="`/post?city=${item.city}`">
+                  <i>{{ index + 1 }}</i>
+                  <strong>{{item.city }}</strong>
+                  <span>{{ item.desc }}</span>
                 </nuxt-link>
-              </li>
-              <li>
-                <nuxt-link :to="`/post?city=广州`">
-                  <i>2</i>
-                  <strong>广州</strong>
-                  <span>世界著名古都</span>
-                </nuxt-link>
-              </li>
-               <li>
-                <nuxt-link :to="`/post?city=广州`">
-                  <i>2</i>
-                  <strong>广州</strong>
-                  <span>世界著名古都</span>
-                </nuxt-link>
-              </li>
-               <li>
-                <nuxt-link :to="`/post?city=广州`">
-                  <i>2</i>
-                  <strong>广州</strong>
-                  <span>世界著名古都</span>
-                </nuxt-link>
-              </li>
-               <li>
-                <nuxt-link :to="`/post?city=广州`">
-                  <i>2</i>
-                  <strong>广州</strong>
-                  <span>世界著名古都</span>
-                </nuxt-link>
-              </li>
+              </li>              
             </ul>
           </div>
         </div>
@@ -66,94 +38,108 @@
       <!-- 右侧内容 -->
       <div class="post-wrapper">
         <!-- 搜索和推荐区域 -->
-        <div class="search-wrapper">
+        <div  class="search-wrapper">
           <el-row type="flex" justify="space-between" align="middle"  class="search-bar"> 
             <input 
             type="text" 
-            placeholder="请输入想去的地方，比如：'广州'"            
-            <i class="el-icon-search"></i>
+            @click.enter="setSearch(null)"
+            v-model="searchCity"
+            placeholder="请输入想去的地方，比如：'广州'">
+            <i class="el-icon-search" @click="setSearch(null)"></i>
           </el-row>
           <div class="search-recommend">
             推荐：
             <span 
                 v-for="(item, index) in [`广州`, `上海`, `北京`]" 
-                :key="index">
-                
-              {{item}}
+                :key="index"
+                @click="setSearch(item)">                
+              {{item }}
             </span>
           </div>
-        </div>
+        </div>       
+          
          <!-- 推荐攻略区域 -->
         <el-row type="flex" justify="space-between"  align="middle" class="post-title">
-          <h4 >推荐攻略</h4>
+          <h4  >推荐攻略</h4>
           <el-button 
           type="primary"
           icon="el-icon-edit">
           写游记
           </el-button>
         </el-row>
+        <el-row>
+           <el-pagination
+            @size-change="handerSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page.sync="currentPage"          
+            :page-size="limit"
+            layout="prev, sizes,pager, next"
+            :total="total">
+          </el-pagination>
+        </el-row>
 
         <!-- 游记列表 -->
-        <div class="post-list">
+        <div class="post-list" >
           <!-- 带有图片列表 -->
-        <div class="post-item card">
-          <!-- 游记标题 -->
-            <h4 title="data.title" class="post-title">
-                <nuxt-link :to="`/post/detail?id=data.id`">
-                   远东行：用好奇心打量这座城 —— 最值得收藏的海参崴出行攻略
-                </nuxt-link>
-            </h4>
-            <!-- 游记描述 -->
-            <p class="post-desc">
-                <nuxt-link :to="`/post/detail?id=data.id`">
-                想象一下一个距离 北京 只有2.5小时飞行距离的城市：身处 亚洲 却能感受到十足的欧陆风情——欧式建筑和街道，金发碧眼的路人，正宗的西餐外加只有国内一半售价的帝王蟹可以敞开吃——更难能可贵的是，这里对国人（实质）免签，有直飞
-                </nuxt-link>
-            </p>
+          <div v-for="(item,index) in list" :key="item.id" class="post-item card">
+            <!-- 游记标题 -->
+              <h4 title="data.title" class="post-title">
+                  <nuxt-link :to="`/post/detail?id=${item.id}`">
+                    {{ item.title }}
+                  </nuxt-link>
+              </h4>
+              <!-- 游记描述 -->
+              <p class="post-desc">
+                  <nuxt-link :to="`/post/detail?id=${item.id}`">
+                  {{ item.summary }}
+                  </nuxt-link>
+              </p>
 
-            <!-- 图片列表 -->
-            <el-row type="flex" 
-                    justify="space-between" 
-                    align="middle"  
-                    class="card-images">
-          
-                <img src="https://n3-q.mafengwo.net/s10/M00/E8/E4/wKgBZ1octoCABhgLAAafahORRLs91.jpeg?imageView2%2F2%2Fw%2F1360%2Fq%2F90">
-                <img src="https://images.mafengwo.net/images/i/face/brands_v3/6@2x.png">
-                <img src="https://p1-q.mafengwo.net/s10/M00/E9/33/wKgBZ1octwiAAKAoAAJ9ixcJc9M71.jpeg?imageView2%2F2%2Fw%2F1360%2Fq%2F90">
-           
-            </el-row >
+              <!-- 图片列表 -->
+              <el-row type="flex" 
+                      justify="space-between" 
+                      align="middle"  
+                      class="card-images">
+            
+                  <img v-for="(imgsrc,index) in item.images" :key="index" 
+                  :src="imgsrc">
+                  <!-- <img src="https://images.mafengwo.net/images/i/face/brands_v3/6@2x.png">
+                  <img src="https://p1-q.mafengwo.net/s10/M00/E9/33/wKgBZ1octwiAAKAoAAJ9ixcJc9M71.jpeg?imageView2%2F2%2Fw%2F1360%2Fq%2F90"> -->
+            
+              </el-row >
 
-            <el-row type="flex" justify="space-between" class="post-info">
-                <el-row type="flex" align="middle" class="post-info-left">
-                    <span>
-                        <i class="el-icon-location-outline"></i> 
-                        北京市
-                    </span>
-                    <el-row type="flex" align="middle" class="post-user">
-                        by 
-                        <nuxt-link to="/user/personal">
-                            <img src="http://210.21.98.31:6004/assets/images/avatar.jpg">
-                        </nuxt-link>
-                        <nuxt-link to="/user/personal">
-                           昵称
-                        </nuxt-link>
-                    </el-row>
-                    <span>
-                        <i class="el-icon-view"></i> 查看次数
-                    </span>
-                </el-row>
-                <span class="post-info-right">
-                    xxx 赞
-                </span>
-            </el-row>
+              <el-row type="flex" justify="space-between" class="post-info">
+                  <el-row type="flex" align="middle" class="post-info-left">
+                      <span>
+                          <i class="el-icon-location-outline"></i> 
+                          {{ item.city.name }}
+                      </span>
+                      <el-row type="flex" align="middle" class="post-user">
+                          by 
+                          <nuxt-link to="/user/personal">
+                              <img src="http://210.21.98.31:6004/assets/images/avatar.jpg">
+                          </nuxt-link>
+                          <nuxt-link to="/user/personal">
+                            {{ item.account.nickname }}
+                          </nuxt-link>
+                      </el-row>
+                      <span>
+                          <i class="el-icon-view">{{ item.watch}}</i> 查看次数
+                      </span>
+                  </el-row>
+                  <span class="post-info-right">
+                      {{ item.like }} 赞
+                  </span>
+              </el-row>
+          </div>
         </div>
-        </div>
 
-        <el-row type="flex" justify="center" style="margin-top:10px;">
-          <el-pagination          
-            :current-page="Math.floor(start / limit) + 1"
-            :page-sizes="[3, 5, 10, 15]"
+        <el-row>
+           <el-pagination
+            @current-change="handleCurrentChange"
+            :current-page.sync="currentPage"
             :page-size="limit"
-            layout="total, sizes, prev, pager, next, jumper"
+            layout="prev, sizes,pager, next"
             :total="total">
           </el-pagination>
         </el-row>
@@ -186,35 +172,115 @@ export default {
       start:0,
       limit:3,
       total:0,
-      cities:[] // 左边一级菜单和二级菜单的数据保存地方
+      currentPage:1, // 分页组件当前是第几页，默认是第一页
+      currentIndex:3,
+      cities:[], // 左边一级菜单和二级菜单的数据保存地方
+      citiesChildren:[], //二级菜单的数据
+      list:[],  // 游记数据
+      searchCity:'北京',  // 搜索的条件数据，城市参数
     }
   },
   methods:{
+    handerSizeChange(pageCount){
+      // 当用户切换每页显示的条数时触发
+      // 需求：
+      /** 
+       * 1. 修改data函数中的limit属性值为当前用户选择的没页显示的条数pageCount
+       * 2. 重置当前页面为第1页
+       * 3.调用getList()重新发送新的参数获取新的数据
+       * */ 
+      this.limit = pageCount;
+      this.currentIndex = 1;
+      this.start = 0;
+      this.getList();
+    },
+    handleCurrentChange(curPage) {
+      // 当用户切换分页页码的时候会触发
+      // console.log('当前页=',curPage);
+      // 逻辑分解
+      /*
+        1. 根据curPage(当前页码数字) 通过 (当前页码- 1) *每页条数 获得需要跳过的数据条数
+        2. 调用getList()重新发出数据请求，获取当页数据
+        3. 修改getList()函数的分页逻辑，增加_start 和 _limit参数才能实现真正的数据分页
+      **/ 
+     this.start = (curPage - 1) * this.limit;
+     this.getList();
+
+    },
+    setSearch(city){
+      // 作用：用来接受用户输入的搜索城市条件数据,重新搜索数据
+      // 注意点:在调用getList之前，请将searchCity使用v-model与搜索input绑定
+
+      if(city) {
+        // 有值才设置
+        this.searchCity = city
+      }
+
+      this.getList();
+
+    },
+    // 获取一级菜单和二级菜单的数据
     getCities() {
+     
       this.$axios.get('http://210.21.98.31:6004/posts/cities')
       .then(res=>{
         this.cities = res.data.data;
       })
     },
-    enterHander(index){ 
-      this.isshow = true;    
+    // 获取游记功能数据
+    getList() {     
+      //  get 请求 http://210.21.98.31:6004/posts
+      // 打开loding
+       const loading = this.$loading({
+          target:'.search-wrapper',
+          lock: true,
+          text: '正在努力加载中，请耐心等待',
+          spinner: 'el-icon-loading',
+          background: 'rgba(255,255,255 0.3)'     
+        });
+
+    // 3. 修改getList()函数的分页逻辑，增加_start 和 _limit参数才能实现真正的数据分页
+  let url =`http://210.21.98.31:6004/posts?city=${this.searchCity}&_limit=${this.limit}&_start=${this.start }`
+
+
+      this.$axios.get(url)
+      .then(res=>{
+         this.list = res.data.data;     
+        //动态化分页条的总条数，来源于服务器返回的数据
+         this.total = res.data.total;
+        // 关闭loding
+        loading.close();
+      })
+    },
+    enterHander(index) {
+      // 控制二级菜单显示出来
+      this.isshow = true;
+      this.currentIndex = index;
+      //  根据索引获取到二级菜单数据
+      this.citiesChildren = this.cities[index].children;
     },
     leaveHander(){
+      // 控制鼠标离开一级菜单后二级菜单要隐藏
       this.isshow = false;
     }
   },
   mounted(){
     // 当旅游攻略页面挂载完成后，触发数据获取方法
     this.getCities();
+    this.getList(); 
   }
 }
 </script>
+
+<style>
+ .el-loading-spinner .el-loading-text{
+  color:orange;
+  font-size: 16px;
+ }
+</style>
+
 <style scoped lang="less">
 
-a{
-  color: #000;
-  text-decoration: none;
-}
 .post-item{
     width:100%;
     padding:20px 0;
@@ -314,7 +380,7 @@ a{
      }
  }
 </style>
-<style scoped lang="less">
+<style  lang="less">
   .container{
     width:1000px;
     margin:0 auto;
